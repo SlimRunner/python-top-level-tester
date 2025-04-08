@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-import argparse
 import unittest
 import importlib.util
 from typing import Any
