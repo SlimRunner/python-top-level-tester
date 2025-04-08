@@ -54,7 +54,7 @@ def testFactory(name: str, filepath: str, module: str):
     assert module in mod_units
     units = mod_units[module]
     assert type(units) == dict
-    print(units)
+
     for ukey, unit in units.items():
         assert type(unit) == dict
         tests = unit["tests"]
@@ -74,7 +74,7 @@ def testFactory(name: str, filepath: str, module: str):
 
     return dyn_class
 
-
+TestHomework = testFactory("TestHomework", "tests.json", "hw1")
 TestHomework = testFactory("TestHomework", "tests.json", "hw2")
 
 if __name__ == "__main__":
