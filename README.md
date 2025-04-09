@@ -1,4 +1,4 @@
-# Usage
+# Setup
 Add a file named `tests.json` to the root and drop in any number of python files at the root as well. If your python file is called `prog.py` then you can write test cases as follows:
 ```json
 {
@@ -32,3 +32,9 @@ Which is parsed into
 ((4),3)
 ```
 If you wish to modify this behavior you can do so at the static method `tuplify` in the `TupleDecoder` class. You can modify it to parse stings directly using python equivalent of eval. I wanted something safer so I used this but feel free to modify it to your convenience.
+
+# Usage
+To run execute the command
+```sh
+python -m unittest
+```
