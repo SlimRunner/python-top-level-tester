@@ -35,9 +35,9 @@ def load_module(name: str, pckg: str) -> Callable | type | None:
         return None
 
 
-def funcFactory(key: str, func: Callable, params: dict, expected: str):
+def funcFactory(key: str, func: Callable, params: dict, expected: Any):
     def anon(self: unittest.TestCase):
-        received = str(func(**params))
+        received = func(**params)
         msgpar = ','.join(f'{k}={e}' for k, e in params.items())
         msg = f"{key}({msgpar}) failed."
         self.assertEqual(received, expected, msg)
