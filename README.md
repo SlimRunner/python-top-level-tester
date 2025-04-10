@@ -20,7 +20,7 @@ Add a file named `tests.json` to the root and drop in any number of python files
 This tests that a function called `func` inside module `prog.py` returns `8` with a parameter called `param` whose argument is `42`. In other words
 ```py
 # inside prog.py
-assert(func(42) == 8)
+assert func(42) == 8
 ```
 
 It also supports tuples. For example, suppose you want to pass a tuple inside a list to a parameter called `x` you can do so like this:
@@ -38,6 +38,30 @@ However, if you wish to modify this behavior you can do so at the static method 
 mod_units = json.load(f, object_hook=TupleDecoder.tuplify)
 ```
 There are tons of resources to write this so I will not put that here, but [the documentation are a good starting point](https://docs.python.org/3/library/json.html).
+
+## Non-deterministic functions
+If your function is non-deterministic and has a clear set of correct answers you can also test with this framework. Consider a function `ndFunc(param)` that receives an int and returns at random some prime less than it. You can do the following
+```json
+{
+  "prog": {
+    "ndFunc": {
+      "tests": [
+        {
+          "input": {
+            "param": 20
+          },
+          "any of": [2, 3, 5, 7, 11, 13, 17]
+        }
+      ]
+    }
+  }
+}
+```
+This is equivalent to
+```py
+assert ndFunc(20) in [2, 3, 5, 7, 11, 13, 17]
+```
+Be mindful that if you put both `output` and `any of` by mistake `output` will take precendence.
 
 # Usage
 To run, execute the command
