@@ -35,17 +35,27 @@ def load_module(name: str, pckg: str) -> Callable | type | None:
         return None
 
 
-def funcFactory(key: str, func: Callable, params: dict, expected: Any):
+def testFactory(key: str, func: Callable, params: dict, expected: Any):
     def anon(self: unittest.TestCase):
         received = func(**params)
-        msgpar = ','.join(f'{k}={e}' for k, e in params.items())
+        msgpar = ",".join(f"{k}={e}" for k, e in params.items())
         msg = f"{key}({msgpar}) failed."
         self.assertEqual(received, expected, msg)
 
     return anon
 
 
-def testFactory(name: str, filepath: str, include: tuple[str] | None = None):
+def fuzzyTestFactory(key: str, func: Callable, params: dict, expectedList: list[Any]):
+    def anon(self: unittest.TestCase):
+        received = func(**params)
+        msgpar = ",".join(f"{k}={e}" for k, e in params.items())
+        msg = f"{key}({msgpar}) failed."
+        self.assertIn(received, expectedList, msg)
+
+    return anon
+
+
+def unitFactory(name: str, filepath: str, include: tuple[str] | None = None):
     methods = {}
 
     with open(filepath, encoding="utf-8") as f:
@@ -69,8 +79,17 @@ def testFactory(name: str, filepath: str, include: tuple[str] | None = None):
             for i, test in enumerate(tests):
                 assert type(test) == dict
                 test_in = test["input"]
-                test_out = test["output"]
-                methods[f"test_{module}_{ukey}_{i}"] = funcFactory(
+                if "output" in test:
+                    test_out = test["output"]
+                    factory = testFactory
+                elif "any of" in test:
+                    test_out = test["any of"]
+                    factory = fuzzyTestFactory
+                else:
+                    raise KeyError(
+                        "each test case should have either `output` or `any of` fields"
+                    )
+                methods[f"test_{module}_{ukey}_{i}"] = factory(
                     ukey, func, test_in, test_out
                 )
 
@@ -83,7 +102,7 @@ def testFactory(name: str, filepath: str, include: tuple[str] | None = None):
     return dyn_class
 
 
-TestHomework = testFactory("TestHomework", "tests.json")
+TestFunctions = unitFactory("TestFunctions", "tests.json")
 
 if __name__ == "__main__":
     unittest.main()
