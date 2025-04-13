@@ -4,6 +4,7 @@ import json
 import unittest
 import importlib.util
 from typing import Any
+from types import ModuleType
 from collections.abc import Callable
 
 
@@ -24,13 +25,20 @@ class TupleDecoder:
             return d
 
 
-def load_module(name: str, pckg: str) -> Callable | type | None:
+def load_module(name: str):
     spec = importlib.util.find_spec(name)
     if spec is not None:
         module = importlib.util.module_from_spec(spec)
         sys.modules[name] = module
         spec.loader.exec_module(module)
-        return getattr(module, pckg)
+        return module
+    else:
+        return None
+
+
+def get_module_member(module: ModuleType | None, object: str) -> Callable | type | None:
+    if module is not None:
+        return getattr(module, object)
     else:
         return None
 
@@ -63,18 +71,22 @@ def unitFactory(name: str, filepath: str, include: tuple[str] | None = None):
 
     assert type(mod_units) == dict
 
-    for module, units in mod_units.items():
+    for modKey, units in mod_units.items():
         assert type(units) == dict
-        assert os.path.exists(f"{module}.py")
+        assert os.path.exists(f"{modKey}.py")
 
-        if include is not None and module not in include:
+        if include is not None and modKey not in include:
             continue
 
-        for ukey, unit in units.items():
+        module = load_module(modKey)
+        assert module is not None
+
+        for unitKey, unit in units.items():
             assert type(unit) == dict
             tests = unit["tests"]
             assert type(tests) == list
-            func = load_module(module, ukey)
+            func = get_module_member(module, unitKey)
+            assert func is not None
 
             for i, test in enumerate(tests):
                 assert type(test) == dict
@@ -89,8 +101,8 @@ def unitFactory(name: str, filepath: str, include: tuple[str] | None = None):
                     raise KeyError(
                         "each test case should have either `output` or `any of` fields"
                     )
-                methods[f"test_{module}_{ukey}_{i}"] = factory(
-                    ukey, func, test_in, test_out
+                methods[f"test_{modKey}_{unitKey}_{i}"] = factory(
+                    unitKey, func, test_in, test_out
                 )
 
     dyn_class = type(
