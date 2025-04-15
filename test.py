@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import numpy
 import unittest
 import importlib.util
 from typing import Any
@@ -19,6 +20,12 @@ class TupleDecoder:
             l = d.get("tuple", [])
             if type(l) == list:
                 return TupleDecoder.__tuple_rec(l)
+            else:
+                return d
+        elif len(d) == 1 and "ndarray" in d:
+            l = d.get("ndarray", [])
+            if type(l) == list:
+                return numpy.array(l)
             else:
                 return d
         else:
