@@ -51,6 +51,16 @@ x=[((4,), "a", False, None)]
 ```
 Unfortunately, you cannot nest in the opposite order (i.e. `([],)`) since the process of converting to tuples is recursive to make writing test cases easier.
 
+#### Sets
+To encode sets in the json file do
+```json
+"x": [{"set": ["a", false, null]}]
+```
+Which is parsed into
+```py
+x={"a", False, None}
+```
+
 #### `numpy` Array
 If your function uses numpy either as an input parameter or outputs one as well, you can create them like this
 ```json
