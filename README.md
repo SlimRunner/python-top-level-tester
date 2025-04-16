@@ -12,7 +12,7 @@ Write your `tests.json` file and place it at the root. Then, execute the command
 python -m unittest
 ```
 
-## Test Format
+## Format of Test Cases
 Add a file named `tests.json` to the root and drop in any number of python files at the root as well. If your python file is called `prog.py` then you can write test cases as follows:
 ```json
 {
@@ -37,7 +37,11 @@ This tests that a function called `func` inside module `prog.py` returns `8` wit
 assert func(42) == 8
 ```
 
-It also supports tuples. For example, suppose you want to pass a tuple inside a list to a parameter called `x` you can do so like this:
+### Custom Types
+The tester provides a dictionary parser to allow types that are not native to Python.
+
+#### Tuples
+Suppose you want to pass a tuple inside a list to a parameter called `x` you can do so like this:
 ```json
 "x": [{"tuple": [[4], "a", false, null]}]
 ```
@@ -45,13 +49,17 @@ Which is parsed into
 ```py
 x=[((4,), "a", False, None)]
 ```
-Unfortunately, you cannot nest in the opposite order. The lists would just turn into tuples.
+Unfortunately, you cannot nest in the opposite order (i.e. `([],)`) since the process of converting to tuples is recursive to make writing test cases easier.
 
-However, if you wish to modify this behavior you can do so at the static method `tuplify` in the `TupleDecoder` class. On the other hand if you want to define them completely different, say as strings, you can also do that. You'd have to modify the code at line
-```py
-mod_units = json.load(f, object_hook=TupleDecoder.tuplify)
+#### `numpy` Array
+If your function uses numpy either as an input parameter or outputs one as well, you can create them like this
+```json
+"x": {"ndarray": [[1,2,3],[4,5,6],[7,8,9]]}
 ```
-There are tons of resources to write this so I will not put that here, but [the documentation are a good starting point](https://docs.python.org/3/library/json.html).
+Which is parsed into
+```py
+x=np.array([[1,2,3],[4,5,6],[7,8,9]])
+```
 
 ### Non-deterministic functions
 If your function is non-deterministic and has a clear set of correct answers you can also test with this framework. Consider a function `ndFunc(param)` that receives an int and returns at random some prime less than it. You can do the following
@@ -75,4 +83,4 @@ This is equivalent to
 ```py
 assert ndFunc(20) in [2, 3, 5, 7, 11, 13, 17]
 ```
-Be mindful that if you put both `output` and `any of` by mistake `output` will take precendence.
+Be mindful that if you use both `output` and `any of` by mistake in the same test case `output` will take precendence.
