@@ -9,17 +9,17 @@ from types import ModuleType
 from collections.abc import Callable
 
 
-class TupleDecoder:
+class DictDecoder:
     @staticmethod
     def __tuple_rec(l: list):
-        return tuple(e if type(e) != list else TupleDecoder.__tuple_rec(e) for e in l)
+        return tuple(e if type(e) != list else DictDecoder.__tuple_rec(e) for e in l)
 
     @staticmethod
     def tuplify(d: dict[str, Any]):
         if len(d) == 1 and "tuple" in d:
             l = d.get("tuple", [])
             if type(l) == list:
-                return TupleDecoder.__tuple_rec(l)
+                return DictDecoder.__tuple_rec(l)
             else:
                 return d
         elif len(d) == 1 and "ndarray" in d:
@@ -74,7 +74,7 @@ def unitFactory(name: str, filepath: str, include: tuple[str] | None = None):
     methods = {}
 
     with open(filepath, encoding="utf-8") as f:
-        mod_units = json.load(f, object_hook=TupleDecoder.tuplify)
+        mod_units = json.load(f, object_hook=DictDecoder.tuplify)
 
     assert type(mod_units) == dict
 
