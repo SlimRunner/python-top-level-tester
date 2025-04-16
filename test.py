@@ -56,11 +56,17 @@ def get_module_member(module: ModuleType | None, object: str) -> Callable | type
         return None
 
 
+def errMsg():
+    a = "\n1st -> received, 2nd -> expected\n"
+    b = "function call:\n{}({})"
+    return a + b
+
+
 def testFactory(key: str, func: Callable, params: dict, expected: Any):
     def anon(self: unittest.TestCase):
         received = func(**params)
         msgpar = ",".join(f"{k}={e}" for k, e in params.items())
-        msg = f"{key}({msgpar}) failed."
+        msg = errMsg().format(key, msgpar)
         self.assertEqual(received, expected, msg)
 
     return anon
