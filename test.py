@@ -22,6 +22,12 @@ class DictDecoder:
                 return DictDecoder.__tuple_rec(l)
             else:
                 return d
+        if len(d) == 1 and "set" in d:
+            l = d.get("set", [])
+            if type(l) == list:
+                return set(l)
+            else:
+                return d
         elif len(d) == 1 and "ndarray" in d:
             l = d.get("ndarray", [])
             if type(l) == list:
