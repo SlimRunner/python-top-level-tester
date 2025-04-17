@@ -1,3 +1,4 @@
+import io
 import os
 import sys
 import json
@@ -6,6 +7,7 @@ import unittest
 import importlib.util
 from typing import Any
 from types import ModuleType
+from unittest.mock import patch
 from collections.abc import Callable
 
 
@@ -62,22 +64,54 @@ def errMsg():
     return a + b
 
 
-def testFactory(key: str, func: Callable, params: dict, expected: Any):
+def testFactory(
+    key: str,
+    func: Callable,
+    params: dict,
+    ret_expect: Any,
+    retval_set: list[Any] | None = None,
+    stdin: str | list[str] | None = None,
+    stdout_expect: str | None = None,
+    stderr_expect: str | None = None,
+    mapper: Callable[[Any, str, str], tuple[Any, str, str]] | None = None,
+):
+    if type(stdin) == str:
+        stdin = stdin.split("\n")
+    elif stdin is None:
+        stdin = []
+
     def anon(self: unittest.TestCase):
-        received = func(**params)
+        with patch("builtins.input", side_effect=stdin):
+            stdout_buff = io.StringIO()
+            stderr_buff = io.StringIO()
+            sys.stdout = stdout_buff
+            sys.stderr = stderr_buff
+            try:
+                ret_recv = func(**params)
+            except Exception as e:
+                raise e
+            finally:
+                sys.stdout = sys.__stdout__
+                sys.stderr = sys.__stderr__
+
+            stdout_recv = stdout_buff.getvalue()
+            stderr_recv = stderr_buff.getvalue()
+            if mapper is not None:
+                ret_recv, stdout_recv, stderr_recv = mapper(
+                    ret_recv, stdout_recv, stderr_recv
+                )
+
         msgpar = ",".join(f"{k}={e}" for k, e in params.items())
         msg = errMsg().format(key, msgpar)
-        self.assertEqual(received, expected, msg)
+        if retval_set is None:
+            self.assertEqual(ret_recv, ret_expect, msg)
+        else:
+            self.assertIn(ret_recv, retval_set, msg)
 
-    return anon
-
-
-def fuzzyTestFactory(key: str, func: Callable, params: dict, expectedList: list[Any]):
-    def anon(self: unittest.TestCase):
-        received = func(**params)
-        msgpar = ",".join(f"{k}={e}" for k, e in params.items())
-        msg = f"{key}({msgpar}) failed."
-        self.assertIn(received, expectedList, msg)
+        if stdout_expect is not None:
+            self.assertEqual(stdout_recv, stdout_expect, msg)
+        if stderr_expect is not None:
+            self.assertEqual(stderr_recv, stderr_expect, msg)
 
     return anon
 
@@ -109,19 +143,26 @@ def unitFactory(name: str, filepath: str, include: tuple[str] | None = None):
 
             for i, test in enumerate(tests):
                 assert type(test) == dict
-                test_in = test["input"]
-                if "output" in test:
-                    test_out = test["output"]
-                    factory = testFactory
-                elif "any of" in test:
-                    test_out = test["any of"]
-                    factory = fuzzyTestFactory
-                else:
-                    raise KeyError(
-                        "each test case should have either `output` or `any of` fields"
-                    )
-                methods[f"test_{modKey}_{unitKey}_{i}"] = factory(
-                    unitKey, func, test_in, test_out
+                test_in = test.get("input", None)
+                test_out = test.get("output", None)
+                test_any = test.get("any of", None)
+                test_stdin = test.get("stdin", None)
+                test_stdout = test.get("stdout", None)
+                test_stderr = test.get("stderr", None)
+                test_mapper = test.get("mapper", None)
+                if test_mapper is not None:
+                    test_mapper = get_module_member(module, test_mapper)
+
+                methods[f"test_{modKey}_{unitKey}_{i}"] = testFactory(
+                    unitKey,
+                    func,
+                    test_in,
+                    test_out,
+                    test_any,
+                    test_stdin,
+                    test_stdout,
+                    test_stderr,
+                    test_mapper,
                 )
 
     dyn_class = type(
