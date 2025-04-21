@@ -17,7 +17,7 @@ class DictDecoder:
         return tuple(e if type(e) != list else DictDecoder.__tuple_rec(e) for e in l)
 
     @staticmethod
-    def tuplify(d: dict[str, Any]):
+    def parse(d: dict[str, Any]):
         if len(d) == 1 and "tuple" in d:
             l = d.get("tuple", [])
             if type(l) == list:
@@ -30,10 +30,16 @@ class DictDecoder:
                 return set(l)
             else:
                 return d
-        elif len(d) == 1 and "ndarray" in d:
+        if len(d) == 1 and "ndarray" in d:
             l = d.get("ndarray", [])
             if type(l) == list:
                 return numpy.array(l)
+            else:
+                return d
+        if len(d) == 1 and "float" in d:
+            l = d.get("float", [])
+            if type(l) == str:
+                return float(l)
             else:
                 return d
         else:
@@ -137,7 +143,7 @@ def unitFactory(name: str, filepath: str, include: tuple[str] | None = None):
     methods = {}
 
     with open(filepath, encoding="utf-8") as f:
-        mod_units = json.load(f, object_hook=DictDecoder.tuplify)
+        mod_units = json.load(f, object_hook=DictDecoder.parse)
 
     assert type(mod_units) == dict
 
