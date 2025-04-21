@@ -129,7 +129,7 @@ def testFactory(
 
         msgpar = ",".join(f"{k}={e}" for k, e in params.items())
         msg = errMsg().format(key, msgpar)
-        getattr(self, ret_assert)(ret_recv, ret_expect, msg + ret_assert)
+        getattr(self, ret_assert)(ret_recv, ret_expect, msg)
 
         if stdout_expect is not None:
             getattr(self, stdout_assert)(stdout_recv, stdout_expect, msg)
