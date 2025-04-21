@@ -154,7 +154,7 @@ def unitFactory(name: str, filepath: str, include: tuple[str] | None = None):
 
             for i, test in enumerate(tests):
                 assert type(test) == dict
-                test_in = test.get("input", None)
+                test_in = test.get("input", {})
                 test_out = test.get("output", None)
                 test_kind = test.get("kind", None)
                 test_stdin = test.get("stdin", None)
