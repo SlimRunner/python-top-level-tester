@@ -62,6 +62,16 @@ x={"a", False, None}
 ```
 **These are not recursive**. It only converts into a set the top level list.
 
+#### Float
+The following
+```json
+"x": {"float": "inf"}
+```
+is parsed into
+```py
+x=float("inf")
+```
+
 #### `numpy` Array
 If your function uses numpy either as an input parameter or outputs one as well, you can create them like this
 ```json
