@@ -69,7 +69,7 @@ def testFactory(
     func: Callable,
     params: dict,
     ret_expect: Any,
-    retval_set: list[Any] | None = None,
+    assert_kinds: tuple[str | None, str | None, str | None] | None = None,
     stdin: str | list[str] | None = None,
     stdout_expect: str | None = None,
     stderr_expect: str | None = None,
@@ -101,17 +101,28 @@ def testFactory(
                     ret_recv, stdout_recv, stderr_recv
                 )
 
+        if assert_kinds is None or len(assert_kinds) != 3:
+            ret_assert = "assertEqual"
+            stdout_assert = "assertEqual"
+            stderr_assert = "assertEqual"
+        else:
+            # yes that was on purpose
+            asserts = []
+            for asskind in assert_kinds:
+                if type(asskind) == str and hasattr(self, asskind):
+                    asserts.append(asskind)
+                else:
+                    asserts.append("assertEqual")
+            ret_assert, stdout_assert, stderr_assert = asserts
+
         msgpar = ",".join(f"{k}={e}" for k, e in params.items())
         msg = errMsg().format(key, msgpar)
-        if retval_set is None:
-            self.assertEqual(ret_recv, ret_expect, msg)
-        else:
-            self.assertIn(ret_recv, retval_set, msg)
+        getattr(self, ret_assert)(ret_recv, ret_expect, msg + ret_assert)
 
         if stdout_expect is not None:
-            self.assertEqual(stdout_recv, stdout_expect, msg)
+            getattr(self, stdout_assert)(stdout_recv, stdout_expect, msg)
         if stderr_expect is not None:
-            self.assertEqual(stderr_recv, stderr_expect, msg)
+            getattr(self, stderr_assert)(stderr_recv, stderr_expect, msg)
 
     return anon
 
@@ -145,7 +156,7 @@ def unitFactory(name: str, filepath: str, include: tuple[str] | None = None):
                 assert type(test) == dict
                 test_in = test.get("input", None)
                 test_out = test.get("output", None)
-                test_any = test.get("any of", None)
+                test_kind = test.get("kind", None)
                 test_stdin = test.get("stdin", None)
                 test_stdout = test.get("stdout", None)
                 test_stderr = test.get("stderr", None)
@@ -158,7 +169,7 @@ def unitFactory(name: str, filepath: str, include: tuple[str] | None = None):
                     func,
                     test_in,
                     test_out,
-                    test_any,
+                    test_kind,
                     test_stdin,
                     test_stdout,
                     test_stderr,
