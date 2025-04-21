@@ -71,14 +71,20 @@ def testFactory(
     ret_expect: Any,
     assert_kinds: tuple[str | None, str | None, str | None] | None = None,
     stdin: str | list[str] | None = None,
-    stdout_expect: str | None = None,
-    stderr_expect: str | None = None,
+    stdout_expect: str | list[str] | None = None,
+    stderr_expect: str | list[str] | None = None,
     mapper: Callable[[Any, str, str], tuple[Any, str, str]] | None = None,
 ):
     if type(stdin) == str:
         stdin = stdin.split("\n")
     elif stdin is None:
         stdin = []
+
+    if stdout_expect is not None and isinstance(stdout_expect, list):
+        stdout_expect = "\n".join(stdout_expect)
+
+    if stderr_expect is not None and isinstance(stderr_expect, list):
+        stderr_expect = "\n".join(stderr_expect)
 
     def anon(self: unittest.TestCase):
         with patch("builtins.input", side_effect=stdin):
