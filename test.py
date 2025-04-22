@@ -177,8 +177,8 @@ def unitFactory(filepath: str, include: tuple[str] | None = None):
                 test_tag = test.get("tag", None)
                 if test_tag is not None:
                     assert type(test_tag) == str
-                    assert test_tag not in tag_set
                     test_tag = f"test_{test_tag.format(i)}"
+                    assert test_tag not in tag_set
                 else:
                     test_tag = f"test_{unitKey}_{i}"
                 tag_set.add(test_tag)
