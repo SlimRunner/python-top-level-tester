@@ -111,7 +111,7 @@ def mapper(ret: Any, stdout: str, stderr: str) -> (Any, str, str):
 In there you can mutate whatever your function generated so that it matches the type of return value you defined as the expected value. This is valuable when a function you cannot control prints to standard output a lot of text, but you only care about one that you can distill out of it.
 
 ## Full Format Spec
-```json
+```jsonc
 {
   "module1": {
     "func1": {
@@ -137,7 +137,9 @@ In there you can mutate whatever your function generated so that it matches the 
           /* must be a string */
           "stderr": "",
           /* read section for expected signature */
-          "mapper": "mapper"
+          "mapper": "mapper",
+          /* may be ommited. Must be string and unique among this test set. Can use {} for automatic numbering */
+          "tag": "tag"
         }
       ]
     },
