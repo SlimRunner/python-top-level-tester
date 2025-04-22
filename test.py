@@ -139,15 +139,15 @@ def testFactory(
     return anon
 
 
-def unitFactory(name: str, filepath: str, include: tuple[str] | None = None):
-    methods = {}
-
+def unitFactory(filepath: str, include: tuple[str] | None = None):
     with open(filepath, encoding="utf-8") as f:
         mod_units = json.load(f, object_hook=DictDecoder.parse)
 
     assert type(mod_units) == dict
+    dyn_classes: dict[tuple[str, type]] = {}
 
     for modKey, units in mod_units.items():
+        methods = {}
         assert type(units) == dict
         assert os.path.exists(f"{modKey}.py")
 
@@ -176,7 +176,7 @@ def unitFactory(name: str, filepath: str, include: tuple[str] | None = None):
                 if test_mapper is not None:
                     test_mapper = get_module_member(module, test_mapper)
 
-                methods[f"test_{modKey}_{unitKey}_{i}"] = testFactory(
+                methods[f"test_{unitKey}_{i}"] = testFactory(
                     unitKey,
                     func,
                     test_in,
@@ -188,16 +188,17 @@ def unitFactory(name: str, filepath: str, include: tuple[str] | None = None):
                     test_mapper,
                 )
 
-    dyn_class = type(
-        name,
-        (unittest.TestCase,),
-        methods,
-    )
+        dyn_class = type(
+            f"Test_{modKey}",
+            (unittest.TestCase,),
+            methods,
+        )
+        dyn_classes[f"Test_{modKey}"] = dyn_class
 
-    return dyn_class
+    return dyn_classes
 
 
-TestFunctions = unitFactory("TestFunctions", "tests.json")
+globals().update(unitFactory("tests.json"))
 
 if __name__ == "__main__":
     unittest.main()
