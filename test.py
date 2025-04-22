@@ -163,6 +163,7 @@ def unitFactory(filepath: str, include: tuple[str] | None = None):
             assert type(tests) == list
             func = get_module_member(module, unitKey)
             assert func is not None
+            tag_set = set()
 
             for i, test in enumerate(tests):
                 assert type(test) == dict
@@ -173,10 +174,18 @@ def unitFactory(filepath: str, include: tuple[str] | None = None):
                 test_stdout = test.get("stdout", None)
                 test_stderr = test.get("stderr", None)
                 test_mapper = test.get("mapper", None)
+                test_tag = test.get("tag", None)
+                if test_tag is not None:
+                    assert type(test_tag) == str
+                    assert test_tag not in tag_set
+                    test_tag = f"test_{test_tag.format(i)}"
+                else:
+                    test_tag = f"test_{unitKey}_{i}"
+                tag_set.add(test_tag)
                 if test_mapper is not None:
                     test_mapper = get_module_member(module, test_mapper)
 
-                methods[f"test_{unitKey}_{i}"] = testFactory(
+                methods[test_tag] = testFactory(
                     unitKey,
                     func,
                     test_in,
