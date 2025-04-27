@@ -1,10 +1,8 @@
 # `top-level-unit-tester`
-A minimalist python script that constructs a unittest class from unit tests provided in a json file. It is designed to run top-level functions in all python modules at the root.
+A minimalist python script that constructs a unittest class from unit tests provided in a json file. It is designed to run top-level functions in all python modules at the root or any of its packages.
 
 ## Setup
-It requires the `numpy` library. This repo was aimed originally to use only standard libraries (hence why I used `json` instead of `pyaml`), but I need to test with `numpy` right now so this is a hot patch to at least make it work with it.
-
-This behavior may change in the future if I found a workaround. For the time being, I recomment using a virtual environment.
+It requires the `numpy` library. This repo was aimed originally to use only standard libraries (hence why it uses `json` instead of `pyaml`). Until a better solution is found to allow custom types without external libraries, it will remain like this. It is recommended to use a virtual environment.
 
 ## Usage
 Write your `tests.json` file and place it at the root. Then, execute the command
@@ -36,6 +34,7 @@ This test asserts that a function called `func` inside module `prog.py` returns 
 # inside prog.py
 assert func(42) == 8
 ```
+Note that `prog` could be a fully qualified Python package. For example, `myPackage.util.foo` for `./myPackage/util/foo`.
 
 ### Custom Types
 The tester provides a dictionary parser to allow types that are not native to Python.
@@ -84,14 +83,14 @@ x=np.array([[1,2,3],[4,5,6],[7,8,9]])
 This may or may not be recursive. The tester simply passes the top level item to `np.array` as shown.
 
 ### Test Other Forms of Output
-The tester allows to inject standard input as well as to capture standard output and standard error. To do this simply add approperty called `stdin`, `stdout`, and or `stderr` to the respective test. All of these **must** be strings. Any of them can be ommited. For the last two no tests are run if they are missing.
+The tester allows to inject standard input as well as to capture standard output and standard error. To do this simply add appropriately called `stdin`, `stdout`, and or `stderr` to the respective test. All of these **must** be strings. Any of them can be omitted. For the last two no tests are run if they are missing.
 
 Similarly you may also leave out the `output` key. However, this will not waive the test. The tester defaults to test if the return value is `null`. Keep this in mind if you are only testing the standard io.
 
 ### Kinds of Tests
-By using the `kind` property in the respective test you can define a custom kind of assertion for `unittest`. If ommited `assertEqual` is used to test the return value of the function. Check the full list of assertions at [Python standard library docs](https://docs.python.org/3/library/unittest.html#assert-methods). Only the ones with binary arity work (the ones with two parameters).
+By using the `kind` property in the respective test you can define a custom kind of assertion for `unittest`. If omitted `assertEqual` is used to test the return value of the function. Check the full list of assertions at [Python standard library docs](https://docs.python.org/3/library/unittest.html#assert-methods). Only the ones with binary arity work (the ones with two parameters).
 
-If you include `kind` poperty the only valid format is as follows
+If you include `kind` property the only valid format is as follows
 ```json
 "kind": ["kind_for_return", "kind_for_stdout", "kind_for_stdin"]
 ```
@@ -113,32 +112,41 @@ In there you can mutate whatever your function generated so that it matches the 
 ## Full Format Spec
 ```jsonc
 {
+  /* can be a fully qualified module name */
   "module1": {
     "func1": {
       "tests": [
         {
-          /* may be ommited or set to {} */
+          /* may be omitted or set to {} */
           "input": {
             "param1": {},
             "param2": {}
             /* ... */
           },
-          /* may be ommited */
+
+          /* may be omitted */
           "kind": ["", "assert...", null],
-          /* may be ommited. Value may be any valid json type */
+
+          /* may be omitted. Value may be any valid json type */
           "output": 0,
-          /* may also be a normal string instead of a list */
+
+          /* may be omitted. Can be a normal string instead of a list */
           "stdin": [
             "multi line",
             "text to be consumed"
           ],
-          /* must be a string */
+
+          /* may be omitted. Must be a string or list of strings */
           "stdout": "",
-          /* must be a string */
+
+          /* may be omitted. Must be a string or list of strings */
           "stderr": "",
-          /* read section for expected signature */
+
+          /* may be omitted. Read section for expected signature */
           "mapper": "mapper",
-          /* may be ommited. Must be string and unique among this test set. Can use {} for automatic numbering */
+
+          /* may be omitted. Must be string and unique among this test set.*/
+          /* Can use "{}" for numbering */
           "tag": "tag"
         }
       ]
