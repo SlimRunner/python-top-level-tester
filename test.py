@@ -47,21 +47,25 @@ class DictDecoder:
 
 
 def load_module(name: str):
+    if "" not in sys.path:
+        sys.path.insert(0, "")  # Make sure CWD is in path
+
     spec = importlib.util.find_spec(name)
-    if spec is not None:
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[name] = module
-        spec.loader.exec_module(module)
-        return module
-    else:
+    if spec is None:
         return None
+
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    if spec.loader is not None:
+        spec.loader.exec_module(module)
+
+    return module
 
 
 def get_module_member(module: ModuleType | None, object: str) -> Callable | type | None:
-    if module is not None:
-        return getattr(module, object)
-    else:
+    if module is None:
         return None
+    return getattr(module, object, None)
 
 
 def errMsg():
@@ -149,7 +153,8 @@ def unitFactory(filepath: str, include: tuple[str] | None = None):
     for modKey, units in mod_units.items():
         methods = {}
         assert type(units) == dict
-        assert os.path.exists(f"{modKey}.py")
+        assert type(modKey) == str
+        assert type(units) == dict
 
         if include is not None and modKey not in include:
             continue
@@ -158,6 +163,7 @@ def unitFactory(filepath: str, include: tuple[str] | None = None):
         assert module is not None
 
         for unitKey, unit in units.items():
+            assert type(unitKey) == str
             assert type(unit) == dict
             tests = unit["tests"]
             assert type(tests) == list
@@ -197,12 +203,13 @@ def unitFactory(filepath: str, include: tuple[str] | None = None):
                     test_mapper,
                 )
 
+        className = "Test_" + modKey.replace(".", "_")
         dyn_class = type(
-            f"Test_{modKey}",
+            className,
             (unittest.TestCase,),
             methods,
         )
-        dyn_classes[f"Test_{modKey}"] = dyn_class
+        dyn_classes[className] = dyn_class
 
     return dyn_classes
 
