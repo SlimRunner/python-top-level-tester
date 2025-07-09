@@ -148,10 +148,10 @@ def unitFactory(filepath: str, include: tuple[str] | None = None):
         mod_units = json.load(f, object_hook=DictDecoder.parse)
 
     assert type(mod_units) == dict
-    dyn_classes: dict[tuple[str, type]] = {}
+    dyn_classes: dict[str, type] = {}
 
     for modKey, units in mod_units.items():
-        methods = {}
+        methods: dict[str, Callable] = {}
         assert type(units) == dict
         assert type(modKey) == str
         assert type(units) == dict
